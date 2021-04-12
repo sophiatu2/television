@@ -16,8 +16,7 @@ import hyperparameters as hp
 from models import YourModel
 from preprocess import Datasets
 from skimage.transform import resize
-from tensorboard_utils import \
-        ImageLabelingLogger, ConfusionMatrixLogger, CustomModelSaver
+from tensorboard_utils import ImageLabelingLogger, ConfusionMatrixLogger, CustomModelSaver
 
 from skimage.io import imread
 from lime import lime_image
@@ -217,7 +216,7 @@ def test(model, test_data):
         # if the user pressed "q", then stop looping
         if keypress == ord("q"):
             break
-    )
+    
 
 # Main function from project 4
 def main():

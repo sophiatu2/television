@@ -20,8 +20,6 @@ class YourModel(tf.keras.Model):
         self.optimizer = RMSprop(learning_rate=hp.learning_rate, momentum=hp.momentum)
         
         self.architecture = [
-               # Match con2d,maxpool2x -> next con2d args
-               #Start smaller?
             # Block 1
             Conv2D(32, 3, 1, padding="same", activation="relu"),
             Conv2D(32, 3, 1, padding="same", activation="relu"),
