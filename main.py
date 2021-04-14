@@ -118,18 +118,18 @@ def segment(image, threshold=25):
 #--------------------------------------------------------------
 # To count the number of fingers in the segmented hand region
 #--------------------------------------------------------------
-def count(thresholded, segmented):
+def count(thresholded, segmented, model):
     count = 0
     # Not sure how to return classified label from model.evaluate???!!
     model.evaluate(
-    x=test_data,
+    x=segmented,
     verbose=1,)
     return count
 
 
 
 # Test function modified from gesture recognition & project 4
-def test(model, test_data):
+def test(model):
     """ Testing routine. """
     # Enter a repl to obtain input images
     # Run model on test set
@@ -194,7 +194,7 @@ def test(model, test_data):
                 cv2.drawContours(clone, [segmented + (right, top)], -1, (0, 0, 255))
 
                 # count the number of fingers
-                fingers = count(thresholded, segmented)
+                fingers = count(thresholded, segmented, model)
 
                 cv2.putText(clone, str(fingers), (70, 45), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
                 
@@ -237,7 +237,7 @@ def main():
     # Run script from location of run.py
     os.chdir(sys.path[0])
 
-    datasets = Datasets(ARGS.data, ARGS.task)
+    datasets = Datasets(ARGS.data)
 
     if ARGS.weights is None:
         # We will train model to obtain weights if we don't have weights
@@ -266,7 +266,7 @@ def main():
         metrics=["sparse_categorical_accuracy"])
 
     if ARGS.evaluate:
-        test(model, datasets.test_data)
+        test(model)
     else:
         train(model, datasets, checkpoint_path, logs_path, init_epoch)
 
