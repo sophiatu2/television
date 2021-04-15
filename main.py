@@ -183,7 +183,8 @@ def test(model):
 
         # get the ROI
         roi = frame[top:bottom, right:left]
-        roi = np.resize(roi, (224,224,3))
+        roi = cv2.resize(roi, (224,224))
+        # roi = np.resize(roi, (224,224,3))
         # roi = imutils.resize(roi, (128,128))
 
         # convert the roi to grayscale and blur it
@@ -203,13 +204,13 @@ def test(model):
         #     hand = segment(gray)
 
         #     # check whether hand region is segmented
-        #     if hand is not None:
-        #         # if yes, unpack the thresholded image and
-        #         # segmented region
-        #         (thresholded, segmented) = hand
+            # if hand is not None:
+            #     # if yes, unpack the thresholded image and
+            #     # segmented region
+            #     (thresholded, segmented) = hand
 
-        #         # draw the segmented region and display the frame
-        #         cv2.drawContours(clone, [segmented + (right, top)], -1, (0, 0, 128))
+            #     # draw the segmented region and display the frame
+            #     cv2.drawContours(clone, [segmented + (right, top)], -1, (0, 0, 128))
 
         #         # count the number of fingers
         #         fingers = count(roi, segmented, model)
