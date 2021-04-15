@@ -248,6 +248,8 @@ def main():
 
         # Print summary of model
         model.summary()
+    else:
+        model.load_weights(ARGS.weights, by_name = False)
 
     # Make checkpoint directory if needed
     if not ARGS.evaluate and not os.path.exists(checkpoint_path):
@@ -260,7 +262,6 @@ def main():
         metrics=["sparse_categorical_accuracy"])
 
     if ARGS.evaluate:
-        model.load_weights(ARGS.weights, by_name = False)
         test(model)
     else:
         train(model, datasets, checkpoint_path, logs_path, init_epoch)
