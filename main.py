@@ -124,7 +124,7 @@ def count(thresholded, segmented, model):
     count = -1
     # Not sure how to return classified label
     model.evaluate(
-    x=segmented,
+    x=thresholded,
     verbose=1,)
     count = model.metrics_names[0]
     return count
