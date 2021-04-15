@@ -128,6 +128,7 @@ def count(thresholded, segmented, model):
     # print(thresholded, thresholded.shape)
     current_frame = np.array(thresholded)
     # current_frame = np.reshape(current_frame, (215,240,,3))
+    #print(current_frame)
     dataset = []
     dataset.append(current_frame)
     dataset = np.array(dataset)
@@ -140,7 +141,7 @@ def count(thresholded, segmented, model):
     # verbose=1)
     count = result[0] 
     print(count) 
-    max_prediction = argmax(count)
+    max_prediction = np.argmax(np.array(count))
     return max_prediction
 
 # Test function modified from gesture recognition & project 4
