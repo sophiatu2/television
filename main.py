@@ -44,7 +44,7 @@ def parse_args():
         extension .h5). Evaluates camera images based on these weights''')
     parser.add_argument(
         '--data',
-        default='..'+os.sep+'data'+os.sep,
+        default='data'+os.sep,
         help='Location where the dataset is stored.')
     parser.add_argument(
         '--confusion',
@@ -123,10 +123,24 @@ def segment(image, threshold=25):
 def count(thresholded, segmented, model):
     count = -1
     # Not sure how to return classified label
-    model.evaluate(
-    x=thresholded,
-    verbose=1,)
-    count = model.metrics_names[0]
+    
+
+    # print(thresholded, thresholded.shape)
+    current_frame = np.array(thresholded)
+    # current_frame = np.reshape(current_frame, (215,240,,3))
+    dataset = []
+    dataset.append(current_frame)
+    dataset = np.array(dataset)
+    # print(dataset.shape)
+    result = model.predict( 
+    x=dataset,
+    verbose=1)
+    # model.evaluate( 
+    # x=dataset,
+    # verbose=1)
+    count = result[0] 
+    print(count) 
+    max_index = argmax()
     return count
 
 # Test function modified from gesture recognition & project 4
@@ -168,6 +182,8 @@ def test(model):
 
         # get the ROI
         roi = frame[top:bottom, right:left]
+        roi = np.resize(roi, (224,224,3))
+        # roi = imutils.resize(roi, (128,128))
 
         # convert the roi to grayscale and blur it
         gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
@@ -175,35 +191,43 @@ def test(model):
 
         # to get the background, keep looking till a threshold is reached
         # so that our weighted average model gets calibrated
-        if num_frames < 30:
-            run_avg(gray, accumWeight)
-            if num_frames == 1:
-                print("[STATUS] please wait! calibrating...")
-            elif num_frames == 29:
-                print("[STATUS] calibration successfull...")
-        else:
-            # segment the hand region
-            hand = segment(gray)
+        # if num_frames < 30:
+        #     run_avg(gray, accumWeight)
+        #     if num_frames == 1:
+        #         print("[STATUS] please wait! calibrating...")
+        #     elif num_frames == 29:
+        #         print("[STATUS] calibration successfull...")
+        # else:
+        #     # segment the hand region
+        #     hand = segment(gray)
 
-            # check whether hand region is segmented
-            if hand is not None:
-                # if yes, unpack the thresholded image and
-                # segmented region
-                (thresholded, segmented) = hand
+        #     # check whether hand region is segmented
+        #     if hand is not None:
+        #         # if yes, unpack the thresholded image and
+        #         # segmented region
+        #         (thresholded, segmented) = hand
 
-                # draw the segmented region and display the frame
-                cv2.drawContours(clone, [segmented + (right, top)], -1, (0, 0, 255))
+        #         # draw the segmented region and display the frame
+        #         cv2.drawContours(clone, [segmented + (right, top)], -1, (0, 0, 128))
 
-                # count the number of fingers
-                fingers = count(thresholded, segmented, model)
+        #         # count the number of fingers
+        #         fingers = count(roi, segmented, model)
 
-                cv2.putText(clone, str(fingers), (70, 45), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
+        #         cv2.putText(clone, str(fingers), (70, 45), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,128), 2)
                 
-                # show the thresholded image
-                cv2.imshow("Thesholded", thresholded)
+        #         # show the thresholded image
+        #         cv2.imshow("Thesholded", thresholded)
 
+        ############
+        #cv2.drawContours(clone, [segmented + (right, top)], -1, (0, 0, 128))
+        # count the number of fingers
+        fingers = count(roi, None, model)
+        cv2.putText(clone, str(fingers), (70, 45), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,128), 2)
+        # show the thresholded image
+        # cv2.imshow("Thesholded", thresholded)
+        ###########
         # draw the segmented hand
-        cv2.rectangle(clone, (left, top), (right, bottom), (0,255,0), 2)
+        cv2.rectangle(clone, (left, top), (right, bottom), (0,128,0), 2)
 
         # increment the number of frames
         num_frames += 1
@@ -259,6 +283,7 @@ def main():
         if not ARGS.evaluate and not os.path.exists(checkpoint_path):
             os.makedirs(checkpoint_path)
         train(model, datasets, checkpoint_path, logs_path, init_epoch)
+        model.evaluate( x=datasets.test_data, verbose=1)
     else:
         model.load_weights(ARGS.weights, by_name = False)
         test(model)

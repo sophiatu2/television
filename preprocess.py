@@ -117,22 +117,14 @@ class Datasets():
 
     def preprocess_fn(self, img):
         """ Preprocess function for ImageDataGenerator. """
-
-        if self.task == '3':
-            img = tf.keras.applications.vgg16.preprocess_input(img)
-        else:
-            img = img / 255.
-            img = self.standardize(img)
+        img = img / 255.
+        img = self.standardize(img)
         return img
 
     def custom_preprocess_fn(self, img):
         """ Custom preprocess function for ImageDataGenerator. """
-
-        if self.task == '3':
-            img = tf.keras.applications.vgg16.preprocess_input(img)
-        else:
-            img = img / 255.
-            img = self.standardize(img)
+        img = img / 255.
+        img = self.standardize(img)
 
         # EXTRA CREDIT:
         # Write your own custom data augmentation procedure, creating

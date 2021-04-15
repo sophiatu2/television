@@ -19,27 +19,58 @@ class YourModel(tf.keras.Model):
 
         self.optimizer = RMSprop(learning_rate=hp.learning_rate, momentum=hp.momentum)
         
+        # self.architecture = [
+        #     # Block 1
+        #     Conv2D(32, 3, 1, padding="same", activation="relu"),
+        #     Conv2D(32, 3, 1, padding="same", activation="relu"),
+        #     MaxPool2D(2),
+        #     # Block 2
+        #     Conv2D(64, 3, 1, padding="same", activation="relu"),
+        #     Conv2D(64, 3, 1, padding="same", activation="relu"),
+        #     MaxPool2D(2),
+        #     # Block 3
+        #     Conv2D(128, 3, 1, padding="same", activation="relu"),
+        #     Conv2D(128, 3, 1, padding="same", activation="relu"),
+        #     MaxPool2D(2),
+        #     # Last Layers
+        #     Conv2D(256, 3, 1, padding="same", activation="relu"),
+        #     MaxPool2D(2),
+        #     Dropout(0.05),
+        #     Flatten(),
+        #     #Dense takes in num classes
+        #     Dense(128,activation="relu"),
+        #     Dense(hp.num_classes, activation = "softmax")
+        # ]
         self.architecture = [
             # Block 1
-            Conv2D(32, 3, 1, padding="same", activation="relu"),
-            Conv2D(32, 3, 1, padding="same", activation="relu"),
-            MaxPool2D(2),
+            Conv2D(128, 4, 1, padding="same",
+                   activation="relu", name="block1_conv1"),
+            Conv2D(128, 4, 1, padding="same",
+                   activation="relu", name="block1_conv2"),
+            MaxPool2D(2, name="block2_pool"),
+            Dropout(rate=0.2),
             # Block 2
-            Conv2D(64, 3, 1, padding="same", activation="relu"),
-            Conv2D(64, 3, 1, padding="same", activation="relu"),
-            MaxPool2D(2),
+            Conv2D(128, 3, 1, padding="same",
+                   activation="relu", name="block2_conv1"),
+            Conv2D(128, 3, 1, padding="same",
+                   activation="relu", name="block2_conv2"),
+            Conv2D(128, 3, 1, padding="same",
+                   activation="relu", name="block2_conv3"),
+            MaxPool2D(2, name="block3_pool"),
+            Dropout(rate=0.2),
             # Block 3
-            Conv2D(128, 3, 1, padding="same", activation="relu"),
-            Conv2D(128, 3, 1, padding="same", activation="relu"),
-            MaxPool2D(2),
-            # Last Layers
-            Conv2D(256, 3, 1, padding="same", activation="relu"),
-            MaxPool2D(2),
-            Dropout(0.05),
+            Conv2D(128, 3, 1, padding="same",
+                   activation="relu", name="block3_conv1"),
+            Conv2D(128, 3, 1, padding="same",
+                   activation="relu", name="block3_conv2"),
+            Conv2D(256, 3, 1, padding="same",
+                   activation="relu", name="block3_conv3"),
+            MaxPool2D(2, name="block4_pool"),
+            Dropout(rate=0.2),
+
             Flatten(),
-            #Dense takes in num classes
-            Dense(128,activation="relu"),
-            Dense(hp.num_classes, activation = "softmax")
+            Dense(64, activation="relu"),
+            Dense(6, activation="softmax")
         ]
              
 
