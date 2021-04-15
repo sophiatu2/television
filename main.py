@@ -120,11 +120,12 @@ def segment(image, threshold=25):
 # To count the number of fingers in the segmented hand region
 #--------------------------------------------------------------
 def count(thresholded, segmented, model):
-    count = count + 1
-    # Not sure how to return classified label from model.evaluate???!!
-    # model.evaluate(
-    # x=segmented,
-    # verbose=1,)
+    count = -1
+    # Not sure how to return classified label
+    model.evaluate(
+    x=segmented,
+    verbose=1,)
+    count = model.metrics_names[0]
     return count
 
 # Test function modified from gesture recognition & project 4
