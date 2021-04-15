@@ -140,8 +140,8 @@ def count(thresholded, segmented, model):
     # verbose=1)
     count = result[0] 
     print(count) 
-    max_index = argmax()
-    return count
+    max_prediction = argmax(count)
+    return max_prediction
 
 # Test function modified from gesture recognition & project 4
 def test(model):
