@@ -41,16 +41,17 @@ def parse_args():
         '--weights', #Names "load-checkpoint" in project 4
         default=None,
         help='''Path to model weights file (should end with the
-        extension .h5).''')
-    parser.add_argument(
-        '--evaluate',
-        action='store_true',
-        help='''Skips training and goes into gesture-recognition repl.
-        Use this to test an already trained model''')
+        extension .h5). Evaluates camera images based on these weights''')
     parser.add_argument(
         '--data',
         default='..'+os.sep+'data'+os.sep,
         help='Location where the dataset is stored.')
+    parser.add_argument(
+        '--confusion',
+        action='store_true',
+        help='''Log a confusion matrix at the end of each
+        epoch (viewable in Tensorboard). This is turned off
+        by default as it takes a little bit of time to complete.''')
 
     return parser.parse_args()
 
@@ -237,24 +238,12 @@ def main():
     os.chdir(sys.path[0])
 
     datasets = Datasets(ARGS.data)
-
-    if ARGS.weights is None:
-        # We will train model to obtain weights if we don't have weights
-        model = YourModel()
-        model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 3)))
-        checkpoint_path = "checkpoints" + os.sep + \
-            "your_model" + os.sep + timestamp + os.sep
-        logs_path = "logs" + os.sep + "your_model" + \
-            os.sep + timestamp + os.sep
-
-        # Print summary of model
-        model.summary()
-    else:
-        model.load_weights(ARGS.weights, by_name = False)
-
-    # Make checkpoint directory if needed
-    if not ARGS.evaluate and not os.path.exists(checkpoint_path):
-        os.makedirs(checkpoint_path)
+    model = YourModel()
+    model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 3)))
+    checkpoint_path = "checkpoints" + os.sep + \
+        "your_model" + os.sep + timestamp + os.sep
+    logs_path = "logs" + os.sep + "your_model" + \
+        os.sep + timestamp + os.sep
 
     # Compile model graph
     model.compile(
@@ -262,10 +251,18 @@ def main():
         loss=model.loss_fn,
         metrics=["sparse_categorical_accuracy"])
 
-    if ARGS.evaluate:
-        test(model)
-    else:
+    if ARGS.weights is None:
+        # We will train model to obtain weights if we don't have weights
+        # Print summary of model
+        model.summary()
+        # Make checkpoint directory if needed
+        if not ARGS.evaluate and not os.path.exists(checkpoint_path):
+            os.makedirs(checkpoint_path)
         train(model, datasets, checkpoint_path, logs_path, init_epoch)
+    else:
+        model.load_weights(ARGS.weights, by_name = False)
+        test(model)
+        
 
 
 # Make arguments global
