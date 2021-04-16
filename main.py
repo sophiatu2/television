@@ -131,14 +131,9 @@ def count(thresholded, segmented, model):
     #print(current_frame)
     dataset = []
     dataset.append(current_frame)
-    dataset = np.array(dataset)
-    # print(dataset.shape)
+    dataset = tf.cast(np.array(dataset), tf.float32)    
     result = model.predict( 
-    x=dataset,
-    verbose=1)
-    # model.evaluate( 
-    # x=dataset,
-    # verbose=1)
+    x=dataset, verbose=10)
     count = result[0] 
     print(count) 
     max_prediction = np.argmax(np.array(count))
@@ -191,40 +186,15 @@ def test(model):
         gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
         gray = cv2.GaussianBlur(gray, (7, 7), 0)
 
-        # to get the background, keep looking till a threshold is reached
-        # so that our weighted average model gets calibrated
-        # if num_frames < 30:
-        #     run_avg(gray, accumWeight)
-        #     if num_frames == 1:
-        #         print("[STATUS] please wait! calibrating...")
-        #     elif num_frames == 29:
-        #         print("[STATUS] calibration successfull...")
-        # else:
-        #     # segment the hand region
-        #     hand = segment(gray)
-
-        #     # check whether hand region is segmented
-            # if hand is not None:
-            #     # if yes, unpack the thresholded image and
-            #     # segmented region
-            #     (thresholded, segmented) = hand
-
-            #     # draw the segmented region and display the frame
-            #     cv2.drawContours(clone, [segmented + (right, top)], -1, (0, 0, 128))
-
-        #         # count the number of fingers
-        #         fingers = count(roi, segmented, model)
-
-        #         cv2.putText(clone, str(fingers), (70, 45), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,128), 2)
-                
-        #         # show the thresholded image
-        #         cv2.imshow("Thesholded", thresholded)
-
         ############
-        #cv2.drawContours(clone, [segmented + (right, top)], -1, (0, 0, 128))
+        # run_avg(gray, accumWeight)
+        # hand = segment(gray)
+        # (thresholded, segmented) = hand
+        # cv2.drawContours(clone, [segmented + (right, top)], -1, (0, 0, 255))
+        
         # count the number of fingers
         fingers = count(roi, None, model)
-        cv2.putText(clone, str(fingers), (70, 45), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,128), 2)
+        cv2.putText(clone, str(fingers), (70, 45), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
         # show the thresholded image
         # cv2.imshow("Thesholded", thresholded)
         ###########
