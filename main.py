@@ -131,7 +131,7 @@ def count(thresholded, segmented, model):
     #print(current_frame)
     dataset = []
     dataset.append(current_frame)
-    dataset = np.array(dataset)
+    dataset = tf.cast(np.array(dataset), tf.float32)
     # print(dataset.shape)
     result = model.predict( 
     x=dataset,
