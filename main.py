@@ -133,7 +133,7 @@ def count(thresholded, segmented, model):
     dataset.append(current_frame)
     dataset = tf.cast(np.array(dataset), tf.float32)    
     result = model.predict( 
-    x=dataset, verbose=10)
+    x=dataset, verbose=1)
     count = result[0] 
     print(count) 
     max_prediction = np.argmax(np.array(count))
