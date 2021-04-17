@@ -133,7 +133,7 @@ def count(thresholded, segmented, model):
     dataset.append(current_frame)
     dataset = tf.cast(np.array(dataset), tf.float32)    
     result = model.predict( 
-    x=dataset, verbose=1)
+    x=dataset, verbose=10)
     count = result[0] 
     print(count) 
     max_prediction = np.argmax(np.array(count))
@@ -252,7 +252,7 @@ def main():
         # Print summary of model
         model.summary()
         # Make checkpoint directory if needed
-        if not ARGS.evaluate and not os.path.exists(checkpoint_path):
+        if not os.path.exists(checkpoint_path):
             os.makedirs(checkpoint_path)
         train(model, datasets, checkpoint_path, logs_path, init_epoch)
         evaluation = model.evaluate( x=datasets.test_data, verbose=1)
@@ -261,7 +261,6 @@ def main():
         model.load_weights(ARGS.weights, by_name = False)
         test(model)
         
-
 
 # Make arguments global
 ARGS = parse_args()
