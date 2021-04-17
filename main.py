@@ -255,7 +255,8 @@ def main():
         if not ARGS.evaluate and not os.path.exists(checkpoint_path):
             os.makedirs(checkpoint_path)
         train(model, datasets, checkpoint_path, logs_path, init_epoch)
-        model.evaluate( x=datasets.test_data, verbose=1)
+        evaluation = model.evaluate( x=datasets.test_data, verbose=1)
+        print(evaluation)
     else:
         model.load_weights(ARGS.weights, by_name = False)
         test(model)
