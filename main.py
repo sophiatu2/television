@@ -151,7 +151,7 @@ def test(model):
     camera = cv2.VideoCapture(0)
 
     # region of interest (ROI) coordinates
-    top, right, bottom, left = 10, 350, 225, 590
+    top, right, bottom, left = 10, 350, 10+224, 350+224
 
     # initialize num of frames
     num_frames = 0
@@ -179,12 +179,27 @@ def test(model):
         # get the ROI
         roi = frame[top:bottom, right:left]
         roi = cv2.resize(roi, (224,224))
+
+        # #contrast and brightness
+        # brightness = 50
+        # contrast = 30
+        # img = np.int16(roi)
+        # img = img * (contrast/127+1) - contrast + brightness
+        # img = np.clip(img, 0, 255)
+        # img = np.uint8(img)
+
+        #invert color
+        # img = cv2.bitwise_not(img)
+
+        #set back
+        # roi = img
         # roi = np.resize(roi, (224,224,3))
         # roi = imutils.resize(roi, (128,128))
 
         # convert the roi to grayscale and blur it
         gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-        gray = cv2.GaussianBlur(gray, (7, 7), 0)
+        gray = np.stack([gray, gray, gray], axis=-1)
+        # gray = cv2.GaussianBlur(gray, (7, 7), 0)
 
         ############
         # run_avg(gray, accumWeight)
@@ -193,7 +208,8 @@ def test(model):
         # cv2.drawContours(clone, [segmented + (right, top)], -1, (0, 0, 255))
         
         # count the number of fingers
-        fingers = count(roi, None, model)
+        clone = gray.copy()
+        fingers = count(gray, None, model)
         cv2.putText(clone, str(fingers), (70, 45), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
         # show the thresholded image
         # cv2.imshow("Thesholded", thresholded)
