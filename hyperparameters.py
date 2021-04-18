@@ -7,7 +7,7 @@ Number of epochs. If you experiment with more complex networks you
 might need to increase this. Likewise if you add regularization that
 slows training.
 """
-num_epochs = 10
+num_epochs = 15
 
 """
 A critical parameter that can dramatically affect whether training
@@ -44,7 +44,7 @@ max_num_weights = 5
 Defines the number of training examples per batch.
 You don't need to modify this.
 """
-batch_size = 10
+batch_size = 20
 
 """
 The number of hand classes. Don't change this.
