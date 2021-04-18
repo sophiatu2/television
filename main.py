@@ -104,7 +104,7 @@ def segment(image, threshold=25):
     diff = cv2.absdiff(bg.astype("uint8"), image)
 
     # threshold the diff image so that we get the foreground
-    thresholded = cv2.threshold(diff, threshold, 255, cv2.THRESH_BINARY)[1]
+    thresholded = cv2.threshold(diff, threshold, 255, cv2.THRESH_TOZERO)[1]
 
     # get the contours in the thresholded image
     (_, cnts, _) = cv2.findContours(thresholded.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -151,7 +151,8 @@ def test(model):
     camera = cv2.VideoCapture(0)
 
     # region of interest (ROI) coordinates
-    top, right, bottom, left = 10, 350, 10+224, 350+224
+    # top, right, bottom, left = 10, 350, 10+224, 350+224
+    top, right, bottom, left = 10, 350, 225, 590
 
     # initialize num of frames
     num_frames = 0
@@ -178,12 +179,52 @@ def test(model):
 
         # get the ROI
         roi = frame[top:bottom, right:left]
-        roi = cv2.resize(roi, (224,224))
+        # roi = cv2.resize(roi, (224,224))
+
+        brightness = 127
+        contrast = 127
+        img = np.int16(roi)
+        img = img - contrast + brightness
+        img = np.clip(img, 0, 255)
+        img = np.uint8(img)
+        roi = img
 
         # convert the roi to grayscale and blur it
         gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-        gray = np.stack([gray, gray, gray], axis=-1)
+
         # gray = cv2.GaussianBlur(gray, (7, 7), 0)
+
+
+        if num_frames < 30:
+            run_avg(gray, accumWeight)
+            if num_frames == 1:
+                print("[STATUS] please wait! calibrating...")
+            elif num_frames == 29:
+                print("[STATUS] calibration successfull...")
+        else:
+            # segment the hand region
+            hand = segment(gray)
+
+            # check whether hand region is segmented
+            if hand is not None:
+                # if yes, unpack the thresholded image and
+                # segmented region
+                (thresholded, segmented) = hand
+
+                # draw the segmented region and display the frame
+                cv2.drawContours(clone, [segmented + (right, top)], -1, (0, 0, 255))
+                
+                gray = thresholded
+                # clone = gray.copy()
+
+                gray = np.stack([gray, gray, gray], axis=-1)
+                gray = cv2.resize(gray, (224,224))
+                fingers = count(gray, None, model)
+                # fingers = 0
+                cv2.putText(clone, str(fingers), (70, 45), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
+                
+                # show the thresholded image
+                cv2.imshow("Thesholded", thresholded)
 
         ############
         # run_avg(gray, accumWeight)
@@ -192,9 +233,10 @@ def test(model):
         # cv2.drawContours(clone, [segmented + (right, top)], -1, (0, 0, 255))
         
         # count the number of fingers
-        clone = gray.copy()
-        fingers = count(gray, None, model)
-        cv2.putText(clone, str(fingers), (70, 45), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
+            # gray = np.stack([gray, gray, gray], axis=-1)
+            # clone = gray.copy()
+            # fingers = count(gray, None, model)
+            # cv2.putText(clone, str(fingers), (70, 45), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
         # show the thresholded image
         # cv2.imshow("Thesholded", thresholded)
         ###########
