@@ -78,7 +78,7 @@ def train(model, datasets, checkpoint_path, logs_path, init_epoch):
         x=datasets.train_data,
         validation_data=datasets.test_data,
         epochs=hp.num_epochs,
-        batch_size=None,
+        batch_size=hp.batch_size,
         callbacks=callback_list,
         initial_epoch=init_epoch,
     )
@@ -255,7 +255,7 @@ def main():
         if not os.path.exists(checkpoint_path):
             os.makedirs(checkpoint_path)
         train(model, datasets, checkpoint_path, logs_path, init_epoch)
-        evaluation = model.evaluate( x=datasets.test_data, verbose=1)
+        evaluation = model.evaluate( x=datasets.test_data, verbose=1, batch_size = hp.batch_size)
         print(evaluation)
     else:
         model.load_weights(ARGS.weights, by_name = False)
