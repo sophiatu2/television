@@ -260,12 +260,11 @@ def main():
     else:
         model.load_weights(ARGS.weights, by_name = False)
         test(model)
+        camera.release()
+        cv2.destroyAllWindows()
         
 
 # Make arguments global
 ARGS = parse_args()
 
 main()
-
-camera.release()
-cv2.destroyAllWindows()
