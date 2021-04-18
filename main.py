@@ -180,22 +180,6 @@ def test(model):
         roi = frame[top:bottom, right:left]
         roi = cv2.resize(roi, (224,224))
 
-        # #contrast and brightness
-        # brightness = 50
-        # contrast = 30
-        # img = np.int16(roi)
-        # img = img * (contrast/127+1) - contrast + brightness
-        # img = np.clip(img, 0, 255)
-        # img = np.uint8(img)
-
-        #invert color
-        # img = cv2.bitwise_not(img)
-
-        #set back
-        # roi = img
-        # roi = np.resize(roi, (224,224,3))
-        # roi = imutils.resize(roi, (128,128))
-
         # convert the roi to grayscale and blur it
         gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
         gray = np.stack([gray, gray, gray], axis=-1)

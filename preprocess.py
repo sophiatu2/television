@@ -49,7 +49,7 @@ class Datasets():
         file_list = []
         for root, _, files in os.walk(os.path.join(self.data_path, "train/")):
             for name in files:
-                if name.endswith(".png"):
+                if name.endswith(".jpg"):
                     file_list.append(os.path.join(root, name))
 
         # Shuffle filepaths
@@ -117,14 +117,22 @@ class Datasets():
 
     def preprocess_fn(self, img):
         """ Preprocess function for ImageDataGenerator. """
-        img = img / 255.
-        img = self.standardize(img)
+
+        if self.task == '3':
+            img = tf.keras.applications.vgg16.preprocess_input(img)
+        else:
+            img = img / 255.
+            img = self.standardize(img)
         return img
 
     def custom_preprocess_fn(self, img):
         """ Custom preprocess function for ImageDataGenerator. """
-        img = img / 255.
-        img = self.standardize(img)
+
+        if self.task == '3':
+            img = tf.keras.applications.vgg16.preprocess_input(img)
+        else:
+            img = img / 255.
+            img = self.standardize(img)
 
         # EXTRA CREDIT:
         # Write your own custom data augmentation procedure, creating

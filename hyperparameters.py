@@ -47,6 +47,6 @@ You don't need to modify this.
 batch_size = 10
 
 """
-The number of hand classes. Don't change this.
+The number of image scene classes. Don't change this.
 """
-num_classes = 6
+num_classes = 15
