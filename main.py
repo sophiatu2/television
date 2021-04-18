@@ -213,6 +213,7 @@ def test(model):
         # if the user pressed "q", then stop looping
         if keypress == ord("q"):
             break
+    camera.release()
 
 # Main function from project 4
 def main():
@@ -260,11 +261,11 @@ def main():
     else:
         model.load_weights(ARGS.weights, by_name = False)
         test(model)
-        camera.release()
-        cv2.destroyAllWindows()
         
 
 # Make arguments global
 ARGS = parse_args()
 
 main()
+
+cv2.destroyAllWindows()
