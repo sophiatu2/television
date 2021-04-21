@@ -107,7 +107,7 @@ def segment(image, threshold=25):
     thresholded = cv2.threshold(diff, threshold, 255, cv2.THRESH_TOZERO)[1]
 
     # get the contours in the thresholded image
-    (_, cnts, _) = cv2.findContours(thresholded.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    (cnts, _) = cv2.findContours(thresholded.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     # return None, if no contours detected
     if len(cnts) == 0:
@@ -184,7 +184,7 @@ def test(model):
         brightness = 127
         contrast = 127
         img = np.int16(roi)
-        img = img - contrast + brightness
+        img = img * (contrast/127 + 1) - contrast + brightness
         img = np.clip(img, 0, 255)
         img = np.uint8(img)
         roi = img
@@ -194,7 +194,7 @@ def test(model):
 
         # gray = cv2.GaussianBlur(gray, (7, 7), 0)
 
-
+        
         if num_frames < 30:
             run_avg(gray, accumWeight)
             if num_frames == 1:
