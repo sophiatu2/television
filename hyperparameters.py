@@ -49,4 +49,4 @@ batch_size = 25
 """
 The number of hand classes. Don't change this.
 """
-num_classes = 6
+num_classes = 15
