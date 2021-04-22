@@ -349,10 +349,6 @@ def loadMusic(music):
 def main():
     """ Main function. """
 
-    # ask for the music file path
-    music = input("Please input an audio file from the list below: \n- friends\n- hallelujah\n- flamingo\n- twistAndShout\n- world\n- dance\n")
-    music += ".mp3"
-
     # set up training
     time_now = datetime.now()
     timestamp = time_now.strftime("%m%d%y-%H%M%S")
@@ -385,6 +381,9 @@ def main():
         evaluation = model.evaluate( x=datasets.test_data, verbose=1)
         print(evaluation)
     else:
+        # ask for the music file path
+        music = input("Please input an audio file from the list below: \n- friends\n- hallelujah\n- flamingo\n- twistAndShout\n- world\n- dance\n")
+        music += ".mp3"
         model.load_weights(ARGS.weights, by_name = False)
         test(model, music)
 
