@@ -7,7 +7,7 @@ Number of epochs. If you experiment with more complex networks you
 might need to increase this. Likewise if you add regularization that
 slows training.
 """
-num_epochs = 15
+num_epochs = 10
 
 """
 A critical parameter that can dramatically affect whether training
@@ -47,6 +47,6 @@ You don't need to modify this.
 batch_size = 25
 
 """
-The number of image scene classes. Don't change this.
+The number of hand classes. Don't change this.
 """
-num_classes = 15
+num_classes = 6
