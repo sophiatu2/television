@@ -278,7 +278,10 @@ def test(model, music):
                             pygame.mixer.music.pause()
                             command = "Pausing: "
                         if average_numb == 1:
-                            music = random.choice(songs) + ".mp3"
+                            newMusic = random.choice(songs) + ".mp3"
+                            while (newMusic == music):
+                                newMusic = random.choice(songs) + ".mp3"
+                            music = newMusic
                             loadMusic(music)
                             command = "Random: "
                         elif average_numb == 3:
