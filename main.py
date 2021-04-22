@@ -9,6 +9,7 @@ import argparse
 import re
 import tensorflow as tf
 import hyperparameters as hp
+import random
 
 from datetime import datetime
 from sklearn.metrics import pairwise
@@ -52,7 +53,9 @@ def parse_args():
         by default as it takes a little bit of time to complete.''')
     return parser.parse_args()
 
-'''Trains the data from the files in the television folder
+
+def train(model, datasets, checkpoint_path, logs_path, init_epoch):
+    '''Trains the data from the files in the television folder
     Inputs:
         model: model for the CNN 
         datasets: the data used to train/test the CNN on
@@ -61,7 +64,6 @@ def parse_args():
         init_epoch: the epochs that the program is running on
     Outputs:
         Trained weights that can be used in testing'''
-def train(model, datasets, checkpoint_path, logs_path, init_epoch):
 
     # Keras callbacks for training
     callback_list = [
@@ -87,8 +89,13 @@ def train(model, datasets, checkpoint_path, logs_path, init_epoch):
         initial_epoch=init_epoch,
     )
 
-# Find the running average over the background
 def run_avg(image, accumWeight):
+    '''Finds the running average over the background
+    Inputs:
+        image: the input images used
+        accumWeight: the weight placed on that imaged
+    Outputs:
+        accumulates the weights of image'''
     global bg
     # initialize the background
     if bg is None:
@@ -98,9 +105,16 @@ def run_avg(image, accumWeight):
     # compute weighted average, accumulate it and update the background
     cv2.accumulateWeighted(image, bg, accumWeight)
 
-# Segment the region of hand in the image
 def segment(image, threshold=25):
+    '''Segments the region of hand in the image
+    Inputs:
+        image: the input images used
+        threshold: the threshold of which we use to segment the image
+    Outputs:
+        segments the image by giving a black background'''
+
     global bg
+
     # find the absolute difference between background and current frame
     diff = cv2.absdiff(bg.astype("uint8"), image)
 
@@ -118,24 +132,42 @@ def segment(image, threshold=25):
         segmented = max(cnts, key=cv2.contourArea)
         return (thresholded, segmented)
 
-#  Count the number of fingers in the segmented hand region
 def count(thresholded, segmented, model):
+    '''Counts the number of fingers in the segmented hand region
+    Inputs:
+        threshold: the threshold of which we use to segment the image
+        segmented: the segemented image with a black background 
+        model: the CNN model we used to get the weights
+    Outputs:
+        get a predicted weight of which finger is displayed'''
+
     count = -1
-    # Not sure how to return classified label
+    # set the current frame
     current_frame = np.array(thresholded)
-    # current_frame = np.reshape(current_frame, (215,240,,3))
+
+    # set the database
     dataset = []
     dataset.append(current_frame)
-    dataset = tf.cast(np.array(dataset), tf.float32)    
+    dataset = tf.cast(np.array(dataset), tf.float32) 
+
+    # predict the dataset   
     result = model.predict( 
     x=dataset, verbose=10)
     count = result[0] 
+
+    # get the prediction 
     max_prediction = np.argmax(np.array(count))
     return max_prediction, count
 
-# Test function modified from gesture recognition & project 4
 def test(model, music):
+    '''Test function modified that runs the camera capturing
+    Inputs:
+        model: the CNN model we used to get the weights
+        music: file name of the music that is being played
+    Outputs:
+        uses a camera to get live feed connection'''
 
+    # set the accumilative weight
     accumWeight = 0.5
     
     # get the reference to the webcam
@@ -150,16 +182,20 @@ def test(model, music):
     # calibration indicator
     calibrated = False
     
-
+    # variables used in the while loop 
     average_numb = 0
     temp_average = []
     recount_frame = 0
     command = "Command: "
+    songs = ["friends", "hallelujah", "flamingo", "twistAndShout", "world", "dance",]
+
+    # loads the music and pauses it
     loadMusic(music)
     pygame.mixer.music.pause()
 
     # keep running until terminated
     while(True):
+        
         # get the current frame
         (grabbed, frame) = camera.read()
 
@@ -177,8 +213,8 @@ def test(model, music):
 
         # get the ROI
         roi = frame[top:bottom, right:left]
-        # roi = cv2.resize(roi, (224,224))
 
+        # increase the brightness
         brightness = 127
         contrast = 127
         img = np.int16(roi)
@@ -190,11 +226,14 @@ def test(model, music):
         # convert the roi to grayscale and blur it
         gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
 
+        # calibrate the live feed
         if num_frames < 30:
             run_avg(gray, accumWeight)
             if num_frames == 1:
+                cv2.putText(clone, "Calibrating", (350, 275), cv2.FONT_HERSHEY_SIMPLEX, 1, (227,132,36), 2)
                 print("calibration of background image")
             elif num_frames == 29:
+                cv2.putText(clone, "successfull", (350, 275), cv2.FONT_HERSHEY_SIMPLEX, 1, (227,132,36), 2)
                 print("calibration successfull")
         else:
             # segment the hand region
@@ -212,37 +251,46 @@ def test(model, music):
                 gray = thresholded
                 # clone = gray.copy()
 
+                # modify the input image
                 gray = np.stack([gray, gray, gray], axis=-1)
                 gray = cv2.resize(gray, (224,224))
+
+                # get the predicted number of fingers and the arrary of predictions
                 (fingers, check_hand) = count(gray, None, model)
                 
+                # checks if the hand is in the screen
                 proceed = True
                 for i in check_hand:
                     if (i != 1 and i != 0):
                         proceed = False
                         break
-
+                
+                # if the hand is in the screen, then proceed
                 if proceed:
                     if recount_frame < 3:
                         temp_average.append(fingers)
                         recount_frame += 1
                     else:
+                        # commands for the live fee
                         average_numb = stats.mode(temp_average)[0][0]
                         print("Command " + str(average_numb))
                         if average_numb == 0:
                             pygame.mixer.music.pause()
                             command = "Pausing: "
-                            print("Pausing music")
+                        if average_numb == 1:
+                            music = random.choice(songs) + ".mp3"
+                            loadMusic(music)
+                            command = "Random: "
                         elif average_numb == 3:
                             loadMusic(music)
                             command = "Restart: "
-                            print("Restart music")
                         elif average_numb == 5:
                             pygame.mixer.music.unpause()
                             command = "Unpause: "
-                            print("Upausing music")
                         temp_average = []
                         recount_frame = 0
+                    
+                    # write text on the popup
                     cv2.putText(clone, "Fingers: " + str(fingers), (70, 45), cv2.FONT_HERSHEY_SIMPLEX, 1, (186, 227, 36), 2)
                     cv2.putText(clone, command + str(average_numb), (70, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (227,195,36), 2)
                 
@@ -261,31 +309,48 @@ def test(model, music):
         cv2.imshow("Video Feed", clone)
 
         # observe the keypress by the user
-        keypress = cv2.waitKey(1) & 0xFF
+        keypress = cv2.waitKey(1) 
 
+        # if the user pressed "c", then change the song
+        if keypress == ord("c"):
+            if (input("Would you like to change songs? (y/n)") == "y"):
+                music = input("Please input an audio file from the list below: \n- friends\n- hallelujah\n- flamingo\n- twistAndShout\n- world\n- dance\n") + ".mp3"
+                loadMusic(music)
+                pygame.mixer.music.pause()
+        
         # if the user pressed "q", then stop looping
         if keypress == ord("q"):
             break
 
+
 def loadMusic(music):
+    ''' loads the music if the file name exists within the directory 
+        inputs: 
+            music: the file name of the music
+        output: 
+            loads and starts playing the music
+    '''
+
     try:
         pygame.mixer.init()
         pygame.mixer.music.load(music)
         print("Playing:", music)
         pygame.mixer.music.play()
     except:
-        print("The audio file you requested is invalid: ")
-        music = input("Please input an adio file from the list below: \n- friends\n- hallelujah\n- flamingo\n- twistAndShout\n- world\n- dance\n")
+        # if the file does not exist, ask for one that does
+        print("The audio file you requested is invalid: " + music)
+        music = input("Please input an audio file from the list below: \n- friends\n- hallelujah\n- flamingo\n- twistAndShout\n- world\n- dance\n") + ".mp3"
         loadMusic(music)
 
 
-# Main function from project 4
 def main():
     """ Main function. """
-    # music = 'music.wav'
-    music = input("Please input an adio file from the list below: \n- friends\n- hallelujah\n- flamingo\n- twistAndShout\n- world\n- dance\n")
+
+    # ask for the music file path
+    music = input("Please input an audio file from the list below: \n- friends\n- hallelujah\n- flamingo\n- twistAndShout\n- world\n- dance\n")
     music += ".mp3"
-    # This is for training
+
+    # set up training
     time_now = datetime.now()
     timestamp = time_now.strftime("%m%d%y-%H%M%S")
     init_epoch = 0
@@ -295,7 +360,6 @@ def main():
 
     # Run script from location of run.py
     os.chdir(sys.path[0])
-
     datasets = Datasets(ARGS.data)
     model = YourModel()
     model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 3)))
