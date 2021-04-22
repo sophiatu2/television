@@ -1,47 +1,42 @@
 # Imports
-# From gesture recognize.py
 import cv2
 import imutils
 import numpy as np
-from sklearn.metrics import pairwise
-from scipy import stats
 import pygame
-
-# From project 4
 import os
 import sys
 import argparse
 import re
-from datetime import datetime
 import tensorflow as tf
-
 import hyperparameters as hp
+
+from datetime import datetime
+from sklearn.metrics import pairwise
+from scipy import stats
 from models import YourModel
 from preprocess import Datasets
 from skimage.transform import resize
 from tensorboard_utils import \
         ImageLabelingLogger, ConfusionMatrixLogger, CustomModelSaver
-
 from skimage.io import imread
 from lime import lime_image
 from skimage.segmentation import mark_boundaries
 from matplotlib import pyplot as plt
 
+# set up the environment 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 # global variables
 bg = None
 
-
-# Parse Arguments to be able to skip training process
-
+'''Parse Arguments that are given to the command line after running <python main.py>'''
 def parse_args():
-    """ Perform command-line argument parsing. """
-
+    # Add arguements to the command line
     parser = argparse.ArgumentParser(
         description="Let's recognize hand gestures!",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
-        '--weights', #Names "load-checkpoint" in project 4
+        '--weights', 
         default=None,
         help='''Path to model weights file (should end with the
         extension .h5). Evaluates camera images based on these weights''')
@@ -55,12 +50,18 @@ def parse_args():
         help='''Log a confusion matrix at the end of each
         epoch (viewable in Tensorboard). This is turned off
         by default as it takes a little bit of time to complete.''')
-
     return parser.parse_args()
 
-# Train functions from project 4
+'''Trains the data from the files in the television folder
+    Inputs:
+        model: model for the CNN 
+        datasets: the data used to train/test the CNN on
+        checkpoint_path: path to the checkpoint
+        logs_path: path to the logs
+        init_epoch: the epochs that the program is running on
+    Outputs:
+        Trained weights that can be used in testing'''
 def train(model, datasets, checkpoint_path, logs_path, init_epoch):
-    """ Training routine. """
 
     # Keras callbacks for training
     callback_list = [
@@ -85,9 +86,8 @@ def train(model, datasets, checkpoint_path, logs_path, init_epoch):
         callbacks=callback_list,
         initial_epoch=init_epoch,
     )
-#--------------------------------------------------
-# To find the running average over the background
-#--------------------------------------------------
+
+# Find the running average over the background
 def run_avg(image, accumWeight):
     global bg
     # initialize the background
@@ -98,9 +98,7 @@ def run_avg(image, accumWeight):
     # compute weighted average, accumulate it and update the background
     cv2.accumulateWeighted(image, bg, accumWeight)
 
-#---------------------------------------------
-# To segment the region of hand in the image
-#---------------------------------------------
+# Segment the region of hand in the image
 def segment(image, threshold=25):
     global bg
     # find the absolute difference between background and current frame
@@ -120,9 +118,7 @@ def segment(image, threshold=25):
         segmented = max(cnts, key=cv2.contourArea)
         return (thresholded, segmented)
 
-#--------------------------------------------------------------
-# To count the number of fingers in the segmented hand region
-#--------------------------------------------------------------
+#  Count the number of fingers in the segmented hand region
 def count(thresholded, segmented, model):
     count = -1
     # Not sure how to return classified label
@@ -134,23 +130,18 @@ def count(thresholded, segmented, model):
     result = model.predict( 
     x=dataset, verbose=10)
     count = result[0] 
-    # print(count) 
     max_prediction = np.argmax(np.array(count))
-    return max_prediction
+    return max_prediction, count
 
 # Test function modified from gesture recognition & project 4
 def test(model, music):
-    """ Testing routine. """
-    # Enter a repl to obtain input images
-    # Run model on test set
-    # initialize accumulated weight
-    accumWeight = 0.5
 
+    accumWeight = 0.5
+    
     # get the reference to the webcam
     camera = cv2.VideoCapture(0)
 
     # region of interest (ROI) coordinates
-    # top, right, bottom, left = 10, 350, 10+224, 350+224
     top, right, bottom, left = 10, 350, 225, 590
 
     # initialize num of frames
@@ -167,8 +158,7 @@ def test(model, music):
     loadMusic(music)
     pygame.mixer.music.pause()
 
-    # keep looping, until interrupted
-
+    # keep running until terminated
     while(True):
         # get the current frame
         (grabbed, frame) = camera.read()
@@ -200,15 +190,12 @@ def test(model, music):
         # convert the roi to grayscale and blur it
         gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
 
-        # gray = cv2.GaussianBlur(gray, (7, 7), 0)
-
-       
         if num_frames < 30:
             run_avg(gray, accumWeight)
             if num_frames == 1:
-                print("[STATUS] please wait! calibrating...")
+                print("calibration of background image")
             elif num_frames == 29:
-                print("[STATUS] calibration successfull...")
+                print("calibration successfull")
         else:
             # segment the hand region
             hand = segment(gray)
@@ -227,55 +214,45 @@ def test(model, music):
 
                 gray = np.stack([gray, gray, gray], axis=-1)
                 gray = cv2.resize(gray, (224,224))
-                fingers = count(gray, None, model)
+                (fingers, check_hand) = count(gray, None, model)
                 
-                cv2.putText(clone, "Fingers: " + str(fingers), (70, 45), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
+                proceed = True
+                for i in check_hand:
+                    if (i != 1 and i != 0):
+                        proceed = False
+                        break
 
-                if recount_frame < 3:
-                    temp_average.append(fingers)
-                    recount_frame += 1
-                    print("Recount", recount_frame)
-                else:
-                    average_numb = stats.mode(temp_average)[0][0]
-                    print("Command " + str(average_numb))
-                    if average_numb == 0:
-                        pygame.mixer.music.pause()
-                        command = "Pausing: "
-                        print("Pausing music")
-                    elif average_numb == 3:
-                        loadMusic(music)
-                        command = "Reload: "
-                        print("Reload music")
-                    elif average_numb == 5:
-                        pygame.mixer.music.unpause()
-                        command = "Unpause: "
-                        print("Upausing music")
-                    temp_average = []
-                    recount_frame = 0
+                if proceed:
+                    if recount_frame < 3:
+                        temp_average.append(fingers)
+                        recount_frame += 1
+                    else:
+                        average_numb = stats.mode(temp_average)[0][0]
+                        print("Command " + str(average_numb))
+                        if average_numb == 0:
+                            pygame.mixer.music.pause()
+                            command = "Pausing: "
+                            print("Pausing music")
+                        elif average_numb == 3:
+                            loadMusic(music)
+                            command = "Restart: "
+                            print("Restart music")
+                        elif average_numb == 5:
+                            pygame.mixer.music.unpause()
+                            command = "Unpause: "
+                            print("Upausing music")
+                        temp_average = []
+                        recount_frame = 0
+                    cv2.putText(clone, "Fingers: " + str(fingers), (70, 45), cv2.FONT_HERSHEY_SIMPLEX, 1, (186, 227, 36), 2)
+                    cv2.putText(clone, command + str(average_numb), (70, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (227,195,36), 2)
                 
-                cv2.putText(clone, command + str(average_numb), (70, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,100,0), 2)
-                
-                cv2.putText(clone, "Place hand in box", (350, 275), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,100,100), 2)
+                cv2.putText(clone, "Place hand in box", (350, 275), cv2.FONT_HERSHEY_SIMPLEX, 1, (227,132,36), 2)
 
                 # show the thresholded image
                 cv2.imshow("Thesholded", thresholded)
 
-        ############
-        # run_avg(gray, accumWeight)
-        # hand = segment(gray)
-        # (thresholded, segmented) = hand
-        # cv2.drawContours(clone, [segmented + (right, top)], -1, (0, 0, 255))
-        
-        # count the number of fingers
-            # gray = np.stack([gray, gray, gray], axis=-1)
-            # clone = gray.copy()
-            # fingers = count(gray, None, model)
-            # cv2.putText(clone, str(fingers), (70, 45), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
-        # show the thresholded image
-        # cv2.imshow("Thesholded", thresholded)
-        ###########
         # draw the segmented hand
-        cv2.rectangle(clone, (left, top), (right, bottom), (100,100,0), 2)
+        cv2.rectangle(clone, (left, top), (right, bottom), (227,71,36), 2)
 
         # increment the number of frames
         num_frames += 1
@@ -291,26 +268,28 @@ def test(model, music):
             break
 
 def loadMusic(music):
-    pygame.mixer.init()
-    pygame.mixer.music.load(music)
-    print("Playing:", music)
-    pygame.mixer.music.play()
+    try:
+        pygame.mixer.init()
+        pygame.mixer.music.load(music)
+        print("Playing:", music)
+        pygame.mixer.music.play()
+    except:
+        print("The audio file you requested is invalid: ")
+        music = input("Please input an adio file from the list below: \n- friends\n- hallelujah\n- flamingo\n- twistAndShout\n- world\n- dance\n")
+        loadMusic(music)
 
 
 # Main function from project 4
 def main():
     """ Main function. """
-    music = 'music.wav'
-
+    # music = 'music.wav'
+    music = input("Please input an adio file from the list below: \n- friends\n- hallelujah\n- flamingo\n- twistAndShout\n- world\n- dance\n")
+    music += ".mp3"
     # This is for training
     time_now = datetime.now()
     timestamp = time_now.strftime("%m%d%y-%H%M%S")
     init_epoch = 0
 
-    # If paths provided by program arguments are accurate, then this will
-    # ensure they are used. If not, these directories/files will be
-    # set relative to the directory of run.py
-    # Not quite sure what this is...?????
     if os.path.exists(ARGS.data):
         ARGS.data = os.path.abspath(ARGS.data)
 
@@ -332,10 +311,7 @@ def main():
         metrics=["sparse_categorical_accuracy"])
 
     if ARGS.weights is None:
-        # We will train model to obtain weights if we don't have weights
-        # Print summary of model
         model.summary()
-        # Make checkpoint directory if needed
         if not os.path.exists(checkpoint_path):
             os.makedirs(checkpoint_path)
         train(model, datasets, checkpoint_path, logs_path, init_epoch)
@@ -344,12 +320,11 @@ def main():
     else:
         model.load_weights(ARGS.weights, by_name = False)
         test(model, music)
-        
 
 # Make arguments global
-ARGS = parse_args()
-
-main()
-
-camera.release()
-cv2.destroyAllWindows()
+if __name__ == '__main__':
+    cv2.__version__
+    ARGS = parse_args()
+    main()
+    camera.release()
+    cv2.destroyAllWindows()
