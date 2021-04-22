@@ -4,6 +4,9 @@ import cv2
 import imutils
 import numpy as np
 from sklearn.metrics import pairwise
+from scipy import stats
+import pygame
+
 # From project 4
 import os
 import sys
@@ -123,24 +126,20 @@ def segment(image, threshold=25):
 def count(thresholded, segmented, model):
     count = -1
     # Not sure how to return classified label
-    
-
-    # print(thresholded, thresholded.shape)
     current_frame = np.array(thresholded)
     # current_frame = np.reshape(current_frame, (215,240,,3))
-    #print(current_frame)
     dataset = []
     dataset.append(current_frame)
     dataset = tf.cast(np.array(dataset), tf.float32)    
     result = model.predict( 
     x=dataset, verbose=10)
     count = result[0] 
-    print(count) 
+    # print(count) 
     max_prediction = np.argmax(np.array(count))
     return max_prediction
 
 # Test function modified from gesture recognition & project 4
-def test(model):
+def test(model, music):
     """ Testing routine. """
     # Enter a repl to obtain input images
     # Run model on test set
@@ -159,8 +158,17 @@ def test(model):
 
     # calibration indicator
     calibrated = False
+    
+
+    average_numb = 0
+    temp_average = []
+    recount_frame = 0
+    command = "Command: "
+    loadMusic(music)
+    pygame.mixer.music.pause()
 
     # keep looping, until interrupted
+
     while(True):
         # get the current frame
         (grabbed, frame) = camera.read()
@@ -194,7 +202,7 @@ def test(model):
 
         # gray = cv2.GaussianBlur(gray, (7, 7), 0)
 
-        
+       
         if num_frames < 30:
             run_avg(gray, accumWeight)
             if num_frames == 1:
@@ -220,9 +228,35 @@ def test(model):
                 gray = np.stack([gray, gray, gray], axis=-1)
                 gray = cv2.resize(gray, (224,224))
                 fingers = count(gray, None, model)
-                # fingers = 0
-                cv2.putText(clone, str(fingers), (70, 45), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
                 
+                cv2.putText(clone, "Fingers: " + str(fingers), (70, 45), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
+
+                if recount_frame < 3:
+                    temp_average.append(fingers)
+                    recount_frame += 1
+                    print("Recount", recount_frame)
+                else:
+                    average_numb = stats.mode(temp_average)[0][0]
+                    print("Command " + str(average_numb))
+                    if average_numb == 0:
+                        pygame.mixer.music.pause()
+                        command = "Pausing: "
+                        print("Pausing music")
+                    elif average_numb == 3:
+                        loadMusic(music)
+                        command = "Reload: "
+                        print("Reload music")
+                    elif average_numb == 5:
+                        pygame.mixer.music.unpause()
+                        command = "Unpause: "
+                        print("Upausing music")
+                    temp_average = []
+                    recount_frame = 0
+                
+                cv2.putText(clone, command + str(average_numb), (70, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,100,0), 2)
+                
+                cv2.putText(clone, "Place hand in box", (350, 275), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,100,100), 2)
+
                 # show the thresholded image
                 cv2.imshow("Thesholded", thresholded)
 
@@ -241,7 +275,7 @@ def test(model):
         # cv2.imshow("Thesholded", thresholded)
         ###########
         # draw the segmented hand
-        cv2.rectangle(clone, (left, top), (right, bottom), (0,128,0), 2)
+        cv2.rectangle(clone, (left, top), (right, bottom), (100,100,0), 2)
 
         # increment the number of frames
         num_frames += 1
@@ -256,9 +290,17 @@ def test(model):
         if keypress == ord("q"):
             break
 
+def loadMusic(music):
+    pygame.mixer.init()
+    pygame.mixer.music.load(music)
+    print("Playing:", music)
+    pygame.mixer.music.play()
+
+
 # Main function from project 4
 def main():
     """ Main function. """
+    music = 'music.wav'
 
     # This is for training
     time_now = datetime.now()
@@ -301,7 +343,7 @@ def main():
         print(evaluation)
     else:
         model.load_weights(ARGS.weights, by_name = False)
-        test(model)
+        test(model, music)
         
 
 # Make arguments global
