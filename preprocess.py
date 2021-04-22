@@ -39,7 +39,9 @@ class Datasets():
     def calc_mean_and_std(self):
         """ Calculate mean and standard deviation of a sample of the
         training dataset for standardization.
+
         Arguments: none
+
         Returns: none
         """
 
@@ -94,8 +96,10 @@ class Datasets():
 
     def standardize(self, img):
         """ Function for applying standardization to an input image.
+
         Arguments:
             img - numpy array of shape (image size, image size, 3)
+
         Returns:
             img - numpy array of shape (image size, image size, 3)
         """
@@ -143,6 +147,7 @@ class Datasets():
     def get_data(self, path, shuffle, augment):
         """ Returns an image data generator which can be iterated
         through for images and corresponding class labels.
+
         Arguments:
             path - Filepath of the data being imported, such as
                    "../data/train" or "../data/test"
@@ -150,6 +155,7 @@ class Datasets():
                       be randomly shuffled.
             augment - Boolean value indicating whether the data should
                       be augmented or not.
+
         Returns:
             An iterable image-batch generator
         """
