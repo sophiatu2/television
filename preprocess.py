@@ -75,18 +75,10 @@ class Datasets():
 
             data_sample[i] = img
 
-        # TODO: Calculate the pixel-wise mean and standard deviation
-        #       of the images in data_sample and store them in
-        #       self.mean and self.std respectively.
-        # ==========================================================
 
         self.mean = np.mean(data_sample, axis = (0,1,2))
         self.std = np.std(data_sample, axis = (0,1,2))
-        # for channel in range(3):
-        #     self.mean[channel] = np.mean(data_sample[:,:,:,channel])
-        #     self.std[channel] = np.std(data_sample[:,:,:,channel])
-
-        # ==========================================================
+    
 
         print("Dataset mean: [{0:.4f}, {1:.4f}, {2:.4f}]".format(
             self.mean[0], self.mean[1], self.mean[2]))
@@ -104,14 +96,7 @@ class Datasets():
             img - numpy array of shape (image size, image size, 3)
         """
 
-        # TODO: Standardize the input image. Use self.mean and self.std
-        #       that were calculated in calc_mean_and_std() to perform
-        #       the standardization.
-        # =============================================================
         img = (img - self.mean) / self.std
-
-
-        # =============================================================
 
         return img
 
@@ -125,16 +110,6 @@ class Datasets():
         """ Custom preprocess function for ImageDataGenerator. """
         img = img / 255.
         img = self.standardize(img)
-
-        # EXTRA CREDIT:
-        # Write your own custom data augmentation procedure, creating
-        # an effect that cannot be achieved using the arguments of
-        # ImageDataGenerator. This can potentially boost your accuracy
-        # in the validation set. Note that this augmentation should
-        # only be applied to some input images, so make use of the
-        # 'random' module to make sure this happens. Also, make sure
-        # that ImageDataGenerator uses *this* function for preprocessing
-        # on augmented data.
 
         if random.random() < 0.3:
             img = img + tf.random.uniform(
@@ -161,40 +136,12 @@ class Datasets():
         """
 
         if augment:
-            # TODO: Use the arguments of ImageDataGenerator()
-            #       to augment the data. Leave the
-            #       preprocessing_function argument as is unless
-            #       you have written your own custom preprocessing
-            #       function (see custom_preprocess_fn()).
-            #
-            # Documentation for ImageDataGenerator: https://bit.ly/2wN2EmK
-            #
-            # ============================================================
-
-            # data_gen = tf.keras.preprocessing.image.ImageDataGenerator(preprocessing_function=self.preprocess_fn, width_shift_range=0.1,height_shift_range=0.1,zoom_range=0.1,rotation_range=5)
-            #rotation_range=5,zoom_range=0.05
-                # width_shift_range=0.05,
-                # height_shift_range=0.05,
-                # horizontal_flip=True, 
-                # rescale=0.05,
-                # shear_range=0.05,
-                # zoom_range=0.05
-            # data_gen = tf.keras.preprocessing.image.ImageDataGenerator(
-            #     preprocessing_function=self.preprocess_fn,
-            #     rotation_range=20,
-            #     width_shift_range=0.2,
-            #     height_shift_range=0.2,
-            #     horizontal_flip=True,
-            #     vertical_flip=True)
             data_gen = tf.keras.preprocessing.image.ImageDataGenerator(preprocessing_function=self.preprocess_fn, width_shift_range=0.1,height_shift_range=0.1,zoom_range=0.1,rotation_range=5)
 
-            # ============================================================
         else:
-            # Don't modify this
             data_gen = tf.keras.preprocessing.image.ImageDataGenerator(
                 preprocessing_function=self.preprocess_fn)
 
-        # VGG must take images of size 224x224
         img_size = hp.img_size
 
         classes_for_flow = None

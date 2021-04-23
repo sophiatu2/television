@@ -14,33 +14,11 @@ class YourModel(tf.keras.Model):
     def __init__(self):
         super(YourModel, self).__init__()
 
-        # TODO: Select an optimizer for your network (see the documentation
-        #       for tf.keras.optimizers)
+        # Select an optimizer for your network
 
         self.optimizer = RMSprop(learning_rate=hp.learning_rate, momentum=hp.momentum)
         
-        # self.architecture = [
-        #     # Block 1
-        #     Conv2D(32, 3, 1, padding="same", activation="relu"),
-        #     Conv2D(32, 3, 1, padding="same", activation="relu"),
-        #     MaxPool2D(2),
-        #     # Block 2
-        #     Conv2D(64, 3, 1, padding="same", activation="relu"),
-        #     Conv2D(64, 3, 1, padding="same", activation="relu"),
-        #     MaxPool2D(2),
-        #     # Block 3
-        #     Conv2D(128, 3, 1, padding="same", activation="relu"),
-        #     Conv2D(128, 3, 1, padding="same", activation="relu"),
-        #     MaxPool2D(2),
-        #     # Last Layers
-        #     Conv2D(256, 3, 1, padding="same", activation="relu"),
-        #     MaxPool2D(2),
-        #     Dropout(0.05),
-        #     Flatten(),
-        #     #Dense takes in num classes
-        #     Dense(128,activation="relu"),
-        #     Dense(hp.num_classes, activation = "softmax")
-        # ]
+        # Architecture for the CNN
         self.architecture = [
             # Block 1
             Conv2D(64, 3, 1, padding="same",
@@ -81,6 +59,5 @@ class YourModel(tf.keras.Model):
     def loss_fn(labels, predictions):
         """ Loss function for the model. """
 
-        # TODO: Select a loss function for your network (see the documentation
-        #       for tf.keras.losses)
+        # loss function for your network
         return tf.keras.losses.sparse_categorical_crossentropy(y_true = labels, y_pred = predictions, from_logits=False)

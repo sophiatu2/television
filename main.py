@@ -122,7 +122,10 @@ def segment(image, threshold=25):
     thresholded = cv2.threshold(diff, threshold, 255, cv2.THRESH_TOZERO)[1]
 
     # get the contours in the thresholded image
-    (_, cnts, _) = cv2.findContours(thresholded.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    try:
+        (_, cnts, _) = cv2.findContours(thresholded.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    except:
+        (cnts, _) = cv2.findContours(thresholded.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     # return None, if no contours detected
     if len(cnts) == 0:
@@ -283,7 +286,7 @@ def test(model, music):
                                 newMusic = random.choice(songs) + ".mp3"
                             music = newMusic
                             loadMusic(music)
-                            command = "Random: "
+                            command = "Shuffle: "
                         elif average_numb == 3:
                             loadMusic(music)
                             command = "Restart: "
@@ -319,7 +322,6 @@ def test(model, music):
             if (input("Would you like to change songs? (y/n)") == "y"):
                 music = input("Please input an audio file from the list below: \n- friends\n- hallelujah\n- flamingo\n- twistAndShout\n- world\n- dance\n") + ".mp3"
                 loadMusic(music)
-                pygame.mixer.music.pause()
         
         # if the user pressed "q", then stop looping
         if keypress == ord("q"):
@@ -389,7 +391,6 @@ def main():
 
 # Make arguments global
 if __name__ == '__main__':
-    cv2.__version__
     ARGS = parse_args()
     main()
     camera.release()
